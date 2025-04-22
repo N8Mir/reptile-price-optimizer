@@ -11,27 +11,35 @@ import streamlit as st
 def scrape_morphmarket(morph_query):
     search_term = morph_query.replace(" ", "+")
     url = f"https://www.morphmarket.com/us/search?q={search_term}"
-    headers = {"User-Agent": "Mozilla/5.0"}
-
-    response = requests.get(url, headers=headers)
-    st.write(f"🔄 Status code: {response.status_code}")
-    st.code(response.text[:1000])  # Show a preview of the HTML
-
-    if response.status_code != 200:
-        return []
-
-    soup = BeautifulSoup(response.text, 'html.parser')
     listings = []
 
-    for card in soup.find_all('div', class_='price'):
-        price_text = card.get_text(strip=True)
-        match = re.search(r'\$(\d+)', price_text)
-        if match:
-            price = int(match.group(1))
-            listings.append({"morph": morph_query, "price": price, "quality": "unknown"})
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(url, timeout=60000)
+        page.wait_for_selector('div.price', timeout=10000)
 
-    st.write(f"✅ Scraped listings: {listings}")  # New debug line
+        # Log part of the page content to see if we are getting the correct data
+        page_content = page.content()
+        print(page_content[:1000])  # Print the first 1000 characters for debugging
+
+        price_elements = page.query_selector_all('div.price')
+        if price_elements:
+            print(f"Found {len(price_elements)} price elements.")
+        else:
+            print("No price elements found.")
+
+        for el in price_elements:
+            price_text = el.inner_text()
+            match = re.search(r'\$(\d+)', price_text)
+            if match:
+                price = int(match.group(1))
+                listings.append({"morph": morph_query, "price": price, "quality": "unknown"})
+
+        browser.close()
+
     return listings
+
 
 
 # --- Core Pricing Logic ---

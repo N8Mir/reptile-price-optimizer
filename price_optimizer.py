@@ -73,8 +73,11 @@ cost = st.number_input("Enter Your Cost ($)", min_value=0, step=1, value=200)
 if st.button("Get Suggested Price"):
     user_animal = {"morph": morph, "quality": quality, "cost": cost}
     with st.spinner("Scraping MorphMarket and analyzing..."):
-        market_listings = scrape_morphmarket(morph)
-        price, explanation = suggest_price(user_animal, market_listings)
+    market_listings = scrape_morphmarket(morph)
+    st.write(f"🔍 Scraped {len(market_listings)} listings:")
+    st.write(market_listings)  # Show the raw scraped data
+    price, explanation = suggest_price(user_animal, market_listings)
+
     
     if price:
         st.success(f"💰 Suggested Price: ${price}")

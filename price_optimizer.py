@@ -14,13 +14,15 @@ def scrape_morphmarket(morph_query):
     headers = {"User-Agent": "Mozilla/5.0"}
 
     response = requests.get(url, headers=headers)
+    st.write(f"🔄 Status code: {response.status_code}")
+    st.code(response.text[:1000])  # Show a preview of the HTML
+
     if response.status_code != 200:
         return []
 
     soup = BeautifulSoup(response.text, 'html.parser')
     listings = []
 
-    # Find listing price elements (basic heuristic)
     for card in soup.find_all('div', class_='price'):
         price_text = card.get_text(strip=True)
         match = re.search(r'\$(\d+)', price_text)
@@ -28,7 +30,9 @@ def scrape_morphmarket(morph_query):
             price = int(match.group(1))
             listings.append({"morph": morph_query, "price": price, "quality": "unknown"})
 
+    st.write(f"✅ Scraped listings: {listings}")  # New debug line
     return listings
+
 
 # --- Core Pricing Logic ---
 def filter_similar_listings(morph, listings):

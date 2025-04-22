@@ -8,12 +8,14 @@ import re
 import streamlit as st
 
 # --- Scrape MorphMarket listings ---
+from playwright.sync_api import sync_playwright  # Ensure playwright is imported
+
 def scrape_morphmarket(morph_query):
     search_term = morph_query.replace(" ", "+")
     url = f"https://www.morphmarket.com/us/search?q={search_term}"
     listings = []
 
-    with sync_playwright() as p:
+    with sync_playwright() as p:  # Correct way to use playwright
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         page.goto(url, timeout=60000)
@@ -39,6 +41,7 @@ def scrape_morphmarket(morph_query):
         browser.close()
 
     return listings
+
 
 
 
